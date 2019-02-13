@@ -10,28 +10,28 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class AccessTokenChecker
 {
-    private $app;
+	private $app;
 
-    private $oAuthMiddleware;
+	private $oAuthMiddleware;
 
-    public function __construct(
-        Application $app,
-        Authenticate $authenticate
-    ) {
-        $this->app = $app;
-        $this->authenticate = $authenticate;
-    }
+	public function __construct(
+		Application $app,
+		Authenticate $authenticate
+	) {
+		$this->app = $app;
+		$this->authenticate = $authenticate;
+	}
 
-    public function handle($request, Closure $next, $scopesString = null)
-    {
-        if ($this->app->environment() !== 'testing') {
-            try {
-                return $this->authenticate->handle($request, $next, 'api');
-            } catch (AuthenticationException $e) {
-                throw new UnauthorizedHttpException('Challenge');
-            }
-        }
+	public function handle($request, Closure $next, $scopesString = null)
+	{
+		if ($this->app->environment() !== 'testing') {
+			try {
+				return $this->authenticate->handle($request, $next, 'api');
+			} catch (AuthenticationException $e) {
+				throw new UnauthorizedHttpException('Challenge');
+			}
+		}
 
-        return $next($request);
-    }
+		return $next($request);
+	}
 }

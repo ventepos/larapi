@@ -2,22 +2,49 @@
 
 namespace Api\Users;
 
-use Infrastructure\Events\EventServiceProvider;
-use Api\Users\Events\UserWasCreated;
-use Api\Users\Events\UserWasDeleted;
-use Api\Users\Events\UserWasUpdated;
+use Infrastructure\Services\Provider;
+use Api\Users\Services\UserService;
 
-class UserServiceProvider extends EventServiceProvider
+class UserServiceProvider extends Provider
 {
-    protected $listen = [
-        UserWasCreated::class => [
-            // listeners for when a user is created
-        ],
-        UserWasDeleted::class => [
-            // listeners for when a user is deleted
-        ],
-        UserWasUpdated::class => [
-            // listeners for when a user is updated
-        ]
-    ];
+	/**
+	 * Indicates if loading of the provider is deferred.
+	 *
+	 * @var bool
+	 */
+	protected $defer = true;
+
+	/**
+	 * Register the service provider.
+	 *
+	 * @return void
+	 */
+	public function register()
+	{
+		$this->registerSingleton();
+	}
+
+	/**
+	 * Register the singleton instance.
+	 *
+	 * @return void
+	 */
+	protected function registerSingleton()
+	{
+		$this->app->singleton('UserService', function ($app) {
+			return $app->make(UserService::class);
+		});
+	}
+
+	/**
+	 * Get the services provided by the provider.
+	 *
+	 * @return array
+	 */
+	public function provides()
+	{
+		return [
+			'UserService',
+		];
+	}
 }

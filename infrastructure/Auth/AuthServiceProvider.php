@@ -9,33 +9,37 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 
 class AuthServiceProvider extends ServiceProvider
 {
-    /**
-     * The policy mappings for the application.
-     *
-     * @var array
-     */
-    protected $policies = [
-        'App\Model' => 'App\Policies\ModelPolicy',
-    ];
+	/**
+	 * The policy mappings for the application.
+	 *
+	 * @var array
+	 */
+	protected $policies = [
+		// 'App\Model' => 'App\Policies\ModelPolicy',
+	];
 
-    /**
-     * Register any authentication / authorization services.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        $this->registerPolicies();
+	/**
+	 * Register any authentication / authorization services.
+	 *
+	 * @return void
+	 */
+	public function boot()
+	{
+		$this->registerPolicies();
 
-        Passport::routes(function ($router) {
-            $router->forAccessTokens();
-            // Uncomment for allowing personal access tokens
-            // $router->forPersonalAccessTokens();
-            $router->forTransientTokens();
-        });
+		Passport::routes(function ($router) {
+			$router->forAccessTokens();
 
-        Passport::tokensExpireIn(Carbon::now()->addMinutes(10));
+			// Uncomment for allowing personal access tokens
+			// $router->forPersonalAccessTokens();
 
-        Passport::refreshTokensExpireIn(Carbon::now()->addDays(10));
-    }
+			$router->forTransientTokens();
+		});
+
+		Passport::tokensExpireIn(Carbon::now()->addHours(config('auth.passport.tokens.expire')));
+
+		Passport::refreshTokensExpireIn(Carbon::now()->addHours(config('auth.passport.refresh_tokens.expire')));
+
+		Passport::tokensCan(config('auth.passport.scopes'));
+	}
 }

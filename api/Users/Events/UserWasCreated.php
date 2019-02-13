@@ -7,10 +7,10 @@ use Api\Users\Models\User;
 
 class UserWasCreated extends Event
 {
-    public $user;
+	public $user;
 
-    public function __construct(User $user)
-    {
-        $this->user = $user;
-    }
+	public function __construct(User $user)
+	{
+		$this->user = $user;
+	}
 }

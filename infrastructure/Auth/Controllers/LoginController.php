@@ -9,30 +9,30 @@ use Infrastructure\Http\Controller;
 
 class LoginController extends Controller
 {
-    private $loginProxy;
+	private $loginProxy;
 
-    public function __construct(LoginProxy $loginProxy)
-    {
-        $this->loginProxy = $loginProxy;
-    }
+	public function __construct(LoginProxy $loginProxy)
+	{
+		$this->loginProxy = $loginProxy;
+	}
 
-    public function login(LoginRequest $request)
-    {
-        $email = $request->get('email');
-        $password = $request->get('password');
+	public function login(LoginRequest $request)
+	{
+		$email = $request->get('email');
+		$password = $request->get('password');
 
-        return $this->response($this->loginProxy->attemptLogin($email, $password));
-    }
+		return $this->response($this->loginProxy->attemptLogin($email, $password));
+	}
 
-    public function refresh(Request $request)
-    {
-        return $this->response($this->loginProxy->attemptRefresh());
-    }
+	public function refresh(Request $request)
+	{
+		return $this->response($this->loginProxy->attemptRefresh());
+	}
 
-    public function logout()
-    {
-        $this->loginProxy->logout();
+	public function logout()
+	{
+		$this->loginProxy->logout();
 
-        return $this->response(null, 204);
-    }
+		return $this->response(null, 204);
+	}
 }

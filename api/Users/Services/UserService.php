@@ -2,6 +2,7 @@
 
 namespace Api\Users\Services;
 
+use Log;
 use Exception;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\DatabaseManager;
@@ -14,75 +15,87 @@ use Api\Users\Repositories\UserRepository;
 
 class UserService
 {
-    private $auth;
+	private $auth;
 
-    private $database;
+	private $database;
 
-    private $dispatcher;
+	private $dispatcher;
 
-    private $userRepository;
+	private $userRepository;
 
-    public function __construct(
-        AuthManager $auth,
-        DatabaseManager $database,
-        Dispatcher $dispatcher,
-        UserRepository $userRepository
-    ) {
-        $this->auth = $auth;
-        $this->database = $database;
-        $this->dispatcher = $dispatcher;
-        $this->userRepository = $userRepository;
-    }
+	public function __construct(
+		AuthManager $auth,
+		DatabaseManager $database,
+		Dispatcher $dispatcher,
+		UserRepository $userRepository
+	) {
+		$this->auth = $auth;
+		$this->database = $database;
+		$this->dispatcher = $dispatcher;
+		$this->userRepository = $userRepository;
+	}
 
-    public function getAll($options = [])
-    {
-        return $this->userRepository->get($options);
-    }
+	public function getAll($options = [])
+	{
+		Log::debug('Fetching users', ['options' => $options]);
+		return $this->userRepository->get($options);
+	}
 
-    public function getById($userId, array $options = [])
-    {
-        $user = $this->getRequestedUser($userId);
+	public function getById($userId, array $options = [])
+	{
+		Log::debug('Fetching user', ['userId' => $userId, 'options' => $options]);
+		$user = $this->getRequestedUser($userId);
 
-        return $user;
-    }
+		return $user;
+	}
 
-    public function create($data)
-    {
-        $user = $this->userRepository->create($data);
+	public function create($data)
+	{
+		// $account = $this->auth->getCurrentUser();
+		// dd($account->id);
 
-        $this->dispatcher->fire(new UserWasCreated($user));
+		// Check if the user has permission to create other users.
+		// Will throw an exception if not.
+		// $account->checkPermission('users.create');
 
-        return $user;
-    }
+		$user = $this->userRepository->create($data);
+		Log::info('Created user', ['userId' => $user->id]);
 
-    public function update($userId, array $data)
-    {
-        $user = $this->getRequestedUser($userId);
+		$this->dispatcher->fire(new UserWasCreated($user));
 
-        $this->userRepository->update($user, $data);
+		return $user;
+	}
 
-        $this->dispatcher->fire(new UserWasUpdated($user));
+	public function update($userId, array $data)
+	{
+		$user = $this->getRequestedUser($userId);
 
-        return $user;
-    }
+		$this->userRepository->update($user, $data);
+		Log::info('Updated user', ['userId' => $userId]);
 
-    public function delete($userId)
-    {
-        $user = $this->getRequestedUser($userId);
+		$this->dispatcher->fire(new UserWasUpdated($user));
 
-        $this->userRepository->delete($userId);
+		return $user;
+	}
 
-        $this->dispatcher->fire(new UserWasDeleted($user));
-    }
+	public function delete($userId)
+	{
+		$user = $this->getRequestedUser($userId);
 
-    private function getRequestedUser($userId)
-    {
-        $user = $this->userRepository->getById($userId);
+		$this->userRepository->delete($userId);
+		Log::info('Deleted user', ['userId' => $userId]);
 
-        if (is_null($user)) {
-            throw new UserNotFoundException();
-        }
+		$this->dispatcher->fire(new UserWasDeleted($user));
+	}
 
-        return $user;
-    }
+	private function getRequestedUser($userId)
+	{
+		$user = $this->userRepository->getById($userId);
+
+		if (is_null($user)) {
+			throw new UserNotFoundException();
+		}
+
+		return $user;
+	}
 }

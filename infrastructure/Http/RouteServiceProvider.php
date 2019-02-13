@@ -16,7 +16,8 @@ class RouteServiceProvider extends ServiceProvider
     {
         $router = $this->app->make(Router::class);
 
-        $router->pattern('id', '[0-9]+');
+        // use if primary keys are UUID
+        // $router->pattern('id', '(?:[0-9]+)|(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})');
 
         parent::boot($router);
     }

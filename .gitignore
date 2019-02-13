@@ -1,8 +1,11 @@
-/vendor
 /node_modules
+/public/hot
 /public/storage
-Homestead.yaml
-Homestead.json
-.env
-.DS_Store
 /storage/*.key
+/vendor
+.env
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log

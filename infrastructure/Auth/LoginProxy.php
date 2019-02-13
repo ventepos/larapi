@@ -5,122 +5,131 @@ namespace Infrastructure\Auth;
 use Illuminate\Foundation\Application;
 use Infrastructure\Auth\Exceptions\InvalidCredentialsException;
 use Api\Users\Repositories\UserRepository;
+use Log;
 
 class LoginProxy
 {
-    const REFRESH_TOKEN = 'refreshToken';
+	const REFRESH_TOKEN = 'refreshToken';
 
-    private $apiConsumer;
+	private $apiConsumer;
 
-    private $auth;
+	private $auth;
 
-    private $cookie;
+	private $cookie;
 
-    private $db;
+	private $db;
 
-    private $request;
+	private $request;
 
-    private $userRepository;
+	private $userRepository;
 
-    public function __construct(Application $app, UserRepository $userRepository) {
-        $this->userRepository = $userRepository;
+	public function __construct(Application $app, UserRepository $userRepository) {
+		$this->userRepository = $userRepository;
 
-        $this->apiConsumer = $app->make('apiconsumer');
-        $this->auth = $app->make('auth');
-        $this->cookie = $app->make('cookie');
-        $this->db = $app->make('db');
-        $this->request = $app->make('request');
-    }
+		$this->apiConsumer = $app->make('apiconsumer');
+		$this->auth = $app->make('auth');
+		$this->cookie = $app->make('cookie');
+		$this->db = $app->make('db');
+		$this->request = $app->make('request');
+	}
 
-    /**
-     * Attempt to create an access token using user credentials
-     *
-     * @param string $email
-     * @param string $password
-     */
-    public function attemptLogin($email, $password)
-    {
-        $user = $this->userRepository->getWhere('email', $email)->first();
+	/**
+	 * Attempt to create an access token using user credentials
+	 *
+	 * @param string $email
+	 * @param string $password
+	 */
+	public function attemptLogin($email, $password)
+	{
+		$user = $this->userRepository->getWhere('email', $email)->first();
 
-        if (!is_null($user)) {
-            return $this->proxy('password', [
-                'username' => $email,
-                'password' => $password
-            ]);
-        }
+		if (!is_null($user)) {
+			$auth =  $this->proxy('password', [
+				'username' => $email,
+				'password' => $password
+			]);
 
-        throw new InvalidCredentialsException();
-    }
+			Log::info('Successfull user authentication', ['username' => $email, 'oauth_type' => 'password']);
 
-    /**
-     * Attempt to refresh the access token used a refresh token that 
-     * has been saved in a cookie
-     */
-    public function attemptRefresh()
-    {
-        $refreshToken = $this->request->cookie(self::REFRESH_TOKEN);
+			 // add the userID for the clients
+			 $auth['user_id'] = $user->id;
+			 return $auth;
+		}
 
-        return $this->proxy('refresh_token', [
-            'refresh_token' => $refreshToken
-        ]);
-    }
+		Log::warning('Authentication attempt for non-existant user', ['username' => $email, 'oauth_type' => 'password']);
 
-    /**
-     * Proxy a request to the OAuth server.
-     * 
-     * @param string $grantType what type of grant type should be proxied
-     * @param array $data the data to send to the server
-     */
-    public function proxy($grantType, array $data = [])
-    {
-        $data = array_merge($data, [
-            'client_id'     => env('PASSWORD_CLIENT_ID'),
-            'client_secret' => env('PASSWORD_CLIENT_SECRET'),
-            'grant_type'    => $grantType
-        ]);
+		throw new InvalidCredentialsException();
+	}
 
-        $response = $this->apiConsumer->post('/oauth/token', $data);
+	/**
+	 * Attempt to refresh the access token used a refresh token that
+	 * has been saved in a cookie
+	 */
+	public function attemptRefresh()
+	{
+		$refreshToken = $this->request->cookie(self::REFRESH_TOKEN);
 
-        if (!$response->isSuccessful()) {
-            throw new InvalidCredentialsException();
-        }
+		return $this->proxy('refresh_token', [
+			'refresh_token' => $refreshToken
+		]);
+	}
 
-        $data = json_decode($response->getContent());
+	/**
+	 * Proxy a request to the OAuth server.
+	 *
+	 * @param string $grantType what type of grant type should be proxied
+	 * @param array $data the data to send to the server
+	 */
+	public function proxy($grantType, array $data = [])
+	{
+		$data = array_merge($data, [
+			'client_id'     => env('PASSWORD_CLIENT_ID'),
+			'client_secret' => env('PASSWORD_CLIENT_SECRET'),
+			'grant_type'    => $grantType
+		]);
 
-        // Create a refresh token cookie
-        $this->cookie->queue(
-            self::REFRESH_TOKEN,
-            $data->refresh_token,
-            864000, // 10 days
-            null,
-            null,
-            false,
-            true // HttpOnly
-        );
+		$response = $this->apiConsumer->post('/oauth/token', $data);
 
-        return [
-            'access_token' => $data->access_token,
-            'expires_in' => $data->expires_in
-        ];
-    }
+		if (!$response->isSuccessful()) {
+			throw new InvalidCredentialsException();
+		}
 
-    /**
-     * Logs out the user. We revoke access token and refresh token. 
-     * Also instruct the client to forget the refresh cookie.
-     */
-    public function logout()
-    {
-        $accessToken = $this->auth->user()->token();
+		$data = json_decode($response->getContent());
 
-        $refreshToken = $this->db
-            ->table('oauth_refresh_tokens')
-            ->where('access_token_id', $accessToken->id)
-            ->update([
-                'revoked' => true
-            ]);
+		// Create a refresh token cookie
+		$this->cookie->queue(
+			self::REFRESH_TOKEN,
+			$data->refresh_token,
+			864000, // 10 days
+			null,
+			null,
+			false,
+			true // HttpOnly
+		);
 
-        $accessToken->revoke();
+		return [
+			'access_token' => $data->access_token,
+			'expires_in' => $data->expires_in
+		];
+	}
 
-        $this->cookie->queue($this->cookie->forget(self::REFRESH_TOKEN));
-    }
+	/**
+	 * Logs out the user. We revoke access token and refresh token.
+	 * Also instruct the client to forget the refresh cookie.
+	 */
+	public function logout()
+	{
+		$accessToken = $this->auth->user()->token();
+
+		$refreshToken = $this->db
+			->table('oauth_refresh_tokens')
+			->where('access_token_id', $accessToken->id)
+			->update([
+				'revoked' => true
+			]);
+
+		$accessToken->revoke();
+
+		$this->cookie->queue($this->cookie->forget(self::REFRESH_TOKEN));
+	}
 }

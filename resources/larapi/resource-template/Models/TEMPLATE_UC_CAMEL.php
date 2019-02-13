@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class TEMPLATE_UC_CAMEL extends Model
 {
-	protected $keyType = 'string';
 	public $table = 'TEMPLATE_LC_SNAKE';
 
 	/**

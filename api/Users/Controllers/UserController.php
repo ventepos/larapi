@@ -5,15 +5,14 @@ namespace Api\Users\Controllers;
 use Illuminate\Http\Request;
 use Infrastructure\Http\Controller;
 use Api\Users\Requests\CreateUserRequest;
-use Api\Users\Services\UserService;
 
 class UserController extends Controller
 {
 	private $userService;
 
-	public function __construct(UserService $userService)
+	public function __construct()
 	{
-		$this->userService = $userService;
+		$this->userService = app()->UserService;
 	}
 
 	public function getAll()

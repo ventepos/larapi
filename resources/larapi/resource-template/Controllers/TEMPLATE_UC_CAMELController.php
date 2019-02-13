@@ -12,7 +12,7 @@ class TEMPLATE_UC_CAMELController extends Controller
 
 	public function __construct()
 	{
-		$this->TEMPLATE_LC_CAMELService = app()->$TEMPLATE_LC_CAMELService;
+		$this->TEMPLATE_LC_CAMELService = app()->TEMPLATE_UC_CAMELService;
 	}
 
 	public function getAll()

@@ -5,15 +5,14 @@ namespace Api\TEMPLATE_UC_PLURAL_CAMEL\Controllers;
 use Illuminate\Http\Request;
 use Infrastructure\Http\Controller;
 use Api\TEMPLATE_UC_PLURAL_CAMEL\Requests\CreateTEMPLATE_UC_CAMELRequest;
-use Api\TEMPLATE_UC_PLURAL_CAMEL\Services\TEMPLATE_UC_CAMELService;
 
 class TEMPLATE_UC_CAMELController extends Controller
 {
 	private $TEMPLATE_LC_CAMELService;
 
-	public function __construct(TEMPLATE_UC_CAMELService $TEMPLATE_LC_CAMELService)
+	public function __construct()
 	{
-		$this->TEMPLATE_LC_CAMELService = $TEMPLATE_LC_CAMELService;
+		$this->TEMPLATE_LC_CAMELService = app()->$TEMPLATE_LC_CAMELService;
 	}
 
 	public function getAll()

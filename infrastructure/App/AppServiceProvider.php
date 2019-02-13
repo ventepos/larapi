@@ -51,8 +51,11 @@ class AppServiceProvider extends ServiceProvider
 			if ($rid)
 				$record['extra']['request_id'] = $rid;
 
-			$record['extra']['user'] = (Auth::user() ? Auth::user()->id : null);
 			$record['extra']['ip'] = request()->get('client_ip');
+
+			// FIXME: causes loop as this triggers a query which if
+			// DEBUG_SQL is enabled, will trigger this again
+			// $record['extra']['user'] = (Auth::user() ? Auth::user()->id : null);
 
 			return $record;
 		});

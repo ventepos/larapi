@@ -1,3 +1,5 @@
 [ ] use plural table names
 [ ] use single column name for Api\Users
 [ ] add global /v{version} 
+[ ] resource template + api/Users CreateRequest validation is uuid => make int
+[ ] resource template convert - to _ in new resource name

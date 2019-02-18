@@ -29,10 +29,6 @@ class AddResourceCommand extends Command
 	public function __construct()
 	{
 		parent::__construct();
-
-		if (config('app.env') === 'production') {
-			throw new Exception('Will not create resource in production!');
-		}
 	}
 
 	/**
@@ -42,6 +38,10 @@ class AddResourceCommand extends Command
 	 */
 	public function handle()
 	{
+		if (config('app.env') === 'production') {
+			throw new Exception('Will not create resource in production!');
+		}
+
 		$name = str_singular($this->argument('name'));
 
 		$this->line(sprintf('Creating Resource: %s', $name));

@@ -4,7 +4,7 @@ namespace Api\TEMPLATE_UC_PLURAL_CAMEL\Models;
 
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Model;
+use Infrastructure\Database\Eloquent\Model;
 
 class TEMPLATE_UC_CAMEL extends Model
 {
